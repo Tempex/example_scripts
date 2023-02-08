@@ -15,7 +15,7 @@ close all hidden;
 % Laden der stabilen Variablen
 wd = 'D:\Experimental\TempInt_EEG\';
 
-% Berücksichtigung weiterer Funktionen
+% BerÃ¼cksichtigung weiterer Funktionen
 addpath([wd, 'functions\altmany-export_fig-9d97e2c']);
 
 % Open eeglab
