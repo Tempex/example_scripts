@@ -1,1 +1,0 @@
-zip.-files contain the analysis script as well as any other data that is needed to run the script on any computer
