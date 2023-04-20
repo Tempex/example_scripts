@@ -34,7 +34,7 @@ wd <- ""
 
 # Read in the data of the No-Production Condition
 df_horen <- 
-  read_excel("data/23-02-08_fopra-group32_logfile-hören.xlsx")
+  read_excel("data/23-02-08_fopra-group32_logfile-hÃ¶ren.xlsx")
 
 # Read in the data of the Production Condition
 df_sagen <- 
