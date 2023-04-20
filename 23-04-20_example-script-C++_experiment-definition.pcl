@@ -1,0 +1,553 @@
+
+
+# # # # # # # # # #
+# # Beginn des PCL Files
+# # # # # # # # # #
+
+
+
+# # # # # # # # # #
+# # Set up a new workspace
+# # # # # # # # # #
+
+
+preset workspace matlab = new workspace("matlabext", true);
+
+
+# # # # # # # # # # 
+# # Variablen Definition
+# # # # # # # # # #
+
+# Bestimmung der vor dem Experiment zu bestimmenden Parameter
+preset int VP_NUMBER = 1;
+preset int SESSION_NUMBER = 3;
+preset string DATE = "191003-1200";
+
+# Bestimmung der Frame Rate
+double FRAME_DURATION = display_device.refresh_period();
+
+# Bestimmung der Struktur-Parameter
+int N_BLOCKS = 8;
+int N_TRIALS = 96;
+
+# Bestimmung der zeitlichen Präsentationsparameter (in Frames)
+int FIXATION_DURATION = 160;
+int TARGET_DURATION = 4;
+int MASK_DURATION = 5;
+int JIT;
+int SOA;
+int ISI;
+
+# Vordefinition der Antwort-Variablen
+int RESPONSE;
+int REPORT;
+
+# Vordefinition des logfile Namens
+string LOG_NAME;
+
+# Vordefinition weiterer Variablen, die im logfile abgespeichert werden
+int b;
+int t;
+int pSOA;
+int pMDMK;
+int RT;
+
+
+# # # # # # # # # #
+# # Button-Balancierung debalancieren
+# # # # # # # # # #
+
+
+# Bestimmung des Modulus, der sich nach acht Versuchsperson stets wiederholt (dient der Zuordnung der acht verschiedenen
+# Tastenkombinationen auf die Versuchspersonen)
+int N_BUTTON_COMBINATIONS = 8;
+int MODULUS = int(mod(VP_NUMBER, N_BUTTON_COMBINATIONS));
+
+# Button Codes: 91 = YT_OE, 92 = NT_OE, 93 = NT_TE, 94 = YT_TE, 95 = Leertaste (Versuchsperson), 
+# 96 = linke Maustaste (Experimentator*in)
+if MODULUS == mod(1, N_BUTTON_COMBINATIONS) then
+	
+	array <int> BUTTON_CODES[6] = {91, 92, 94, 93, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+
+elseif MODULUS == mod(2, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {92, 91, 93, 94, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+	
+elseif MODULUS == mod(3, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {94, 93, 91, 92, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);	
+	
+elseif MODULUS == mod(4, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {93, 94, 92, 91, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+	
+elseif MODULUS == mod(5, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {91, 94, 92, 93, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+	
+elseif MODULUS == mod(6, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {94, 91, 93, 92, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+	
+elseif MODULUS == mod(7, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {92, 93, 91, 94, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+	
+elseif MODULUS == mod(8, N_BUTTON_COMBINATIONS) then
+
+	array <int> BUTTON_CODES[6] = {93, 92, 94, 91, 95, 96};
+	response_manager.set_button_codes(BUTTON_CODES);
+	
+end;
+
+
+# # # # # # # # # #
+# # Vordefinition des Output Files
+# # # # # # # # # #
+
+
+# Definition des Namens des Logfiles
+if VP_NUMBER < 10 then
+	
+	LOG_NAME = "TempInt_Demask_v0" + string(VP_NUMBER) + "_s" + string(SESSION_NUMBER) + "_MCM_" + DATE;
+	
+else
+	
+	LOG_NAME = "TempInt_Demask_v" + string(VP_NUMBER) + "_s" + string(SESSION_NUMBER) + "_MCM_" + DATE;
+	
+end;
+
+logfile.set_filename(LOG_NAME + "_pres.log");
+
+
+# # # # # # # # # #
+# # Definition eines eigenen Logfiles
+
+# Definition des Namens des Outputfiles
+output_file OUTPUT_FILE = new output_file;
+
+# Öffnen des Outputfiles
+OUTPUT_FILE.open(LOG_NAME + ".txt");
+
+# Eintragen der Spaltenüberschriften
+OUTPUT_FILE.print("VP\tSESSION\tBLOCK\tTRIAL\tSOAf\tpSOAf\tpMDMK\tRESPONSE\tREPORT\tRTms\tJITf\n");
+
+# Schließen des Outputfiles
+OUTPUT_FILE.close();
+
+
+# # # # # # # # # #
+# # Subroutine zum Eintragen der Daten in das Logfile
+
+sub
+
+	# Diese Subroutine füllt das Output-File nach jedem Durchgang mit dessen Parameterausprägungen
+	Write_trial_parameters
+	
+begin
+	
+   OUTPUT_FILE.open_append(LOG_NAME + ".txt"); 
+
+   OUTPUT_FILE.print(VP_NUMBER);
+   OUTPUT_FILE.print("\t");
+
+   OUTPUT_FILE.print(SESSION_NUMBER);
+   OUTPUT_FILE.print("\t");
+
+	OUTPUT_FILE.print(b);
+   OUTPUT_FILE.print("\t");
+
+   OUTPUT_FILE.print(t);
+   OUTPUT_FILE.print("\t");
+
+   OUTPUT_FILE.print(SOA);
+   OUTPUT_FILE.print("\t");
+
+   OUTPUT_FILE.print(pSOA);
+   OUTPUT_FILE.print("\t");
+
+   OUTPUT_FILE.print(pMDMK);
+   OUTPUT_FILE.print("\t");
+	
+	OUTPUT_FILE.print(RESPONSE);
+	OUTPUT_FILE.print("\t");
+	
+	OUTPUT_FILE.print(REPORT);
+	OUTPUT_FILE.print("\t");
+	
+   OUTPUT_FILE.print(RT);
+   OUTPUT_FILE.print("\t");
+
+   OUTPUT_FILE.print(JIT);
+   OUTPUT_FILE.print("\n");
+
+   OUTPUT_FILE.close();
+
+end;
+
+
+# # # # # # # # # #
+# # Generieren der Experimentalparameter (für den ersten Block)
+# # # # # # # # # #
+
+
+# # # # # # # # # #
+# # Einstellen der Stimulus-Dauern
+
+# Einstellen der Target-Dauer
+STIMULUS_EVENT_TARGET.set_duration(int((TARGET_DURATION - 0.5) * FRAME_DURATION));
+
+# Einstellen der Masken-Dauer
+STIMULUS_EVENT_MASK.set_duration(int((MASK_DURATION - 0.5) * FRAME_DURATION));
+
+
+# # # # # # # # # #
+# # Einlesen der primären Parameter
+
+# Definition des Datei-Pfades
+string primary_parameters_filename = "D:\\experimente\\MA_AlexanderKraut\\TempInt_Demask\\Session2\\logfiles\\primeparams\\vp" + string(VP_NUMBER) + "_s2_primeparams.txt";
+
+# Einlesen der Datei
+input_file primary_parameters_input = new input_file;
+primary_parameters_input.open(primary_parameters_filename);
+
+# Einlesen der pSOA und pMDMK
+primary_parameters_input.get_line();
+pSOA = primary_parameters_input.get_int();
+pMDMK = primary_parameters_input.get_int();
+
+# Schließen der Datei
+primary_parameters_input.close();
+
+
+# # # # # # # # # #
+# # Generieren der SOA-Matrix
+
+# Generieren eines Grundbausteins
+array <int> SOA_ARRAY_BASE[6] = {4, 7, 9, 11, 13, 16};
+
+loop int i = 1 until i > 6 begin
+	
+	# Wiederholtes Anfügen der pSOA an den Grundbaustein
+	SOA_ARRAY_BASE.add(pSOA);
+	
+	# Eintritt in den nächsten Durchlauf
+	i = i + 1;
+	
+end;
+
+# Generieren der eigentlichen SOA-Matrix
+array <int> SOA_ARRAY[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+SOA_ARRAY.assign(SOA_ARRAY_BASE);
+
+# Aneinanderkettung des Grundbausteins
+loop int i = 1 until i > 7 begin
+	
+	# Wiederholtes Anfügen der Grundbausteine aneinander
+	SOA_ARRAY.append(SOA_ARRAY_BASE);
+	
+	# Eintritt in den nächsten Durchlauf
+	i = i + 1;
+	
+end;
+
+# Randomisierung der SOA-Reihenfolge
+SOA_ARRAY.shuffle();
+
+
+# # # # # # # # # #
+# # Einstellen der zu präsentierenden Maske
+
+# Auswahl der im nächsten Block zu präsentierenden Maske
+STIMULUS_EVENT_MASK.set_stimulus(ARRAY_MASKS[pMDMK]);
+
+
+# # # # # # # # # #
+# # Öffnen des Ports
+# # # # # # # # # #
+
+output_port port = output_port_manager.get_port(1);
+
+
+# # # # # # # # # #
+# # Start des Experiments
+# # # # # # # # # #
+
+
+TRIAL_WILLKOMMEN.present();
+
+TRIAL_TASK_INFO.present();
+
+TRIAL_BLOCK_INFO.present();
+
+
+# # # # # # # # # #
+# # Schleife der Haupt-Blöcke
+# # # # # # # # # #
+
+
+# Beginn der Block-Schleife
+loop
+
+	b = 1
+	
+until 
+
+	b > N_BLOCKS
+	
+begin
+		
+	# Versuchspersonen-Tracking (Pause zwischen Blöcken)
+	term.print("\nPause");
+	
+	if b > 1 then
+		
+		
+		# # # # # # # # # #
+		# # Präsentation des Pausenbildschirms
+		
+		# Neu-Erzeugung des Pausenbildschirms
+		TEXT_PAUSE.set_caption("Du hast Block " + string(b - 1) + "/" + string(N_BLOCKS) + " erfolgreich abgeschlossen!\n\nDurch Drücken der LEERTASTE startest du den nächsten Block.");
+		
+		# Präsentation des Pausenbildschirms
+		TEXT_PAUSE.redraw();
+		TRIAL_PAUSE.present();
+		
+		
+		# # # # # # # # # #
+		# # Run the matlab code
+		
+		# Execute the adaptive process function
+		matlab.run("addpath 'D:\\experimente\\MA_AlexanderKraut\\TempInt_Demask\\Session3\\functions\\'");
+		matlab.run("nextblock_primeparams_generator(" + string(VP_NUMBER) + ")");
+		
+		
+		# # # # # # # # # #
+		# # Load the newly determined pSOA and pMDMK
+		
+		# Definition des Datei-Pfades
+		primary_parameters_filename = "D:\\experimente\\MA_AlexanderKraut\\TempInt_Demask\\Session3\\logfiles\\primeparams_s3_blockwise\\vp" + string(VP_NUMBER) + "_s3_block" + string(b-1) + "_primeparams.txt";
+		
+		# Einlesen der Datei
+		primary_parameters_input = new input_file;
+		primary_parameters_input.open(primary_parameters_filename);
+		
+		# Einlesen der pSOA und pMDMK
+		primary_parameters_input.get_line();
+		pSOA = primary_parameters_input.get_int();
+		pMDMK = primary_parameters_input.get_int();
+		
+		# Schließen der Datei
+		primary_parameters_input.close();
+		
+		
+		# # # # # # # # # #
+		# # Erneutes Generieren der SOA-Matrix
+		
+		# Generieren eines Grundbausteins
+		SOA_ARRAY_BASE.assign({4, 7, 9, 11, 13, 16});
+		
+		loop int i = 1 until i > 6 begin
+			
+			# Wiederholtes Anfügen der pSOA an den Grundbaustein
+			SOA_ARRAY_BASE.add(pSOA);
+			
+			# Eintritt in den nächsten Durchlauf
+			i = i + 1;
+			
+		end;
+		
+		# Generieren der eigentlichen SOA-Matrix
+		SOA_ARRAY.assign(SOA_ARRAY_BASE);
+		
+		# Aneinanderkettung des Grundbausteins
+		loop int i = 1 until i > 7 begin
+			
+			# Wiederholtes Anfügen der Grundbausteine aneinander
+			SOA_ARRAY.append(SOA_ARRAY_BASE);
+			
+			# Eintritt in den nächsten Durchlauf
+			i = i + 1;
+			
+		end;
+		
+		# Randomisierung der SOA-Reihenfolge
+		SOA_ARRAY.shuffle();
+		
+		
+		# # # # # # # # # #
+		# # Einstellen der zu präsentierenden Maske
+		
+		# Auswahl der im nächsten Block zu präsentierenden Maske
+		STIMULUS_EVENT_MASK.set_stimulus(ARRAY_MASKS[pMDMK]);
+		
+	end;
+	
+	# Neu-Erzeugung des Fixations-Bildschirms
+	TEXT_FIXATION_PREPARATION.set_caption("Fokussiere nun bitte den Fixationspunkt und verlasse diesen nur, wenn du deinen Wahrnehmungseindruck abgibst oder du dich in einer Pause zwischen Blöcken befindest.\n\nDurch Drücken der LEERTASTE signalisierst du deine Bereitschaft Block " + string(b) + "/" + string(N_BLOCKS) + " zu starten. Der Block beginnt dann sobald dein EEG frei von Störsignalen ist.");
+	
+	# Sicherstellung, dass die Versuchsperson die Fixation herstellen
+	TEXT_FIXATION_PREPARATION.redraw();
+	TRIAL_FIXATION_PREPARATION.present();
+	
+	# Versuchspersonen-Tracking (Freischaltung des nächsten Blocks)
+	term.print("\nDie Versuchsperson möchte mit dem nächsten Block beginnen - Linke Maustaste drücken, sobald EEG ruhig ist!");
+
+	# Sicherstellung, dass das EEG beruhigt ist
+	TRIAL_EEG_PREPARATION.present();
+	
+	# Versuchspersonen-Tracking (Beginn des Blocks)
+	term.print("\nBlock " + string(b) + "\t");
+	
+	
+	# # # # # # # # # #
+	# # Start der EEG-Aufnahme
+	
+	TRIAL_SYSTEM_BREAK.present();
+	port.send_code(254);
+	TRIAL_SYSTEM_BREAK.present();
+	
+	
+	# # # # # # # # # #
+	# # Schleife der Hauptdurchgänge
+	# # # # # # # # # #
+	
+	
+	# Beginn der Trial-Schleife
+	loop 
+		
+		t = 1
+		
+   until 
+		
+		t > N_TRIALS
+		
+   begin 
+		
+		# Versuchspersonen-Tracking (Beginn des Trials)
+      if mod(t, 5) == 0 then
+			
+			term.print(string(t));
+			
+		else
+			
+			term.print(".");
+			
+		end;
+		
+		
+		# # # # # # # # # #
+		# # Definition der Parameter für diesen Durchgang
+		
+		# Definition der allgemeinen Trial-Zeiten
+		JIT = int(round(160 * random(),0));
+		SOA = int(SOA_ARRAY[t]);
+		ISI = int(SOA - TARGET_DURATION);
+		
+		# Einstellung des Port-Codes der ersten Fixation (beinhaltet Info darüber, ob ein pSOA gezeigt wird oder nicht)
+		# 1 = pSOA, 0 = kein pSOA + Block Info
+		if pSOA == SOA then
+			
+			STIMULUS_EVENT_FIXATION_FIRST.set_port_code(int(string(b) + string(1)));
+			
+		else
+			
+			STIMULUS_EVENT_FIXATION_FIRST.set_port_code(int(string(b) + string(0)));
+			
+		end;
+		
+		# Einstellung des Zielreiz-Onsets und -Port-Codes
+		STIMULUS_EVENT_TARGET.set_time(int((FIXATION_DURATION + JIT + 0.5) * FRAME_DURATION));
+		
+		if SOA< 10 then
+			
+			STIMULUS_EVENT_TARGET.set_port_code(int(string(10) + string(SOA)));
+			
+		else
+			
+			STIMULUS_EVENT_TARGET.set_port_code(int(string(1) + string(SOA)));
+			
+		end;
+		
+		# Einstellung des Masken-Onsets
+		if SOA > TARGET_DURATION then
+			
+			STIMULUS_EVENT_MASK.set_deltat(int((SOA - 1.5) * FRAME_DURATION));
+			
+		else
+			
+			STIMULUS_EVENT_MASK.set_deltat(int((SOA - 0.5) * FRAME_DURATION));
+			
+		end;
+		
+		# Einstellung des Masken-Port-Codes
+		if pMDMK < 10 then
+			
+			STIMULUS_EVENT_MASK.set_port_code(int(string(20) + string(pMDMK)));
+			
+		else
+			
+			STIMULUS_EVENT_MASK.set_port_code(int(string(2) + string(pMDMK)));
+			
+		end;
+		
+		
+		# # # # # # # # # #
+		# # Start der Präsentation
+		
+		# Target-Masken-Präsentation
+		TRIAL_MAIN.present();
+		
+		# Antwort-Bildschirm
+		TRIAL_RESPONSE.present();
+		
+		# Temporäres Abspeichern der Antwort-Variablen
+		RESPONSE = response_manager.last_response_data().button();
+		REPORT = response_manager.last_response_data().code();
+		RT = stimulus_manager.last_stimulus_data().reaction_time();
+		
+		
+		# # # # # # # # # #
+		# # Eintragen der Trial-Parameter in das Logfile
+		
+		# Abspeichern der Daten dieses Trials
+      Write_trial_parameters();
+		
+		# Eintritt in den nächsten Trial
+      t = t + 1;
+
+	end;
+	# Ende der Trial-Schleife
+	
+	
+	# # # # # # # # # #
+	# # Pausieren der EEG-Aufnahme
+	
+	TRIAL_SYSTEM_BREAK.present();
+	port.send_code(255);
+	TRIAL_SYSTEM_BREAK.present();
+	
+	# Eintritt in den nächsten Block
+	b = b + 1;
+	
+end;
+# Ende der Block-Schleife
+
+# Versuchspersonen-Tracking (Ende der Blöcke)
+term.print("\nDie Versuchsperson befindet sich auf der letzten Folie.");
+
+# Präsentation der Abschieds-Folie
+TRIAL_ENDE.present();
+
+
+# # # # # # # # # #
+# # Ende des PCL Files
+# # # # # # # # # #
+
